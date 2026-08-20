@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: servird
+    runtime: node
+    plan: free
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: NEXT_PUBLIC_APP_URL
+        fromService:
+          name: servird
+          type: web
+          property: url
