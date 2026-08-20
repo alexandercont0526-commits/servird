@@ -1,0 +1,282 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==================== ENUMS ====================
+
+enum Rol {
+  client
+  professional
+  admin
+}
+
+enum EstadoSolicitud {
+  solicitado
+  recibiendo_cotizaciones
+  profesional_seleccionado
+  programado
+  en_proceso
+  completado
+  cancelado
+}
+
+enum EstadoCotizacion {
+  pending
+  accepted
+  rejected
+  withdrawn
+}
+
+enum TipoArchivo {
+  image
+  video
+}
+
+// ==================== TABLAS ====================
+
+model Usuario {
+  id            String    @id @default(uuid()) @db.Uuid
+  email         String    @unique @db.VarChar(255)
+  passwordHash  String    @map("password_hash") @db.VarChar(255)
+  nombre        String    @db.VarChar(100)
+  apellido      String    @db.VarChar(100)
+  telefono      String?   @db.VarChar(20)
+  rol           Rol       @default(client)
+  avatarUrl     String?   @map("avatar_url") @db.Text
+  latitud       Decimal?  @db.Decimal(10, 8)
+  longitud      Decimal?  @db.Decimal(11, 8)
+  ciudad        String?   @db.VarChar(100)
+  direccion     String?   @db.VarChar(300)
+  isActive      Boolean   @default(true) @map("is_active")
+  isVerified    Boolean   @default(false) @map("is_verified")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
+
+  perfilProfesional  PerfilProfesional?
+  solicitudesCreadas SolicitudServicio[] @relation("ClienteSolicitudes")
+  resenasEscritas    Resena[]            @relation("AutorResenas")
+  mensajesEnviados   Mensaje[]           @relation("EmisorMensajes")
+  notificaciones     Notificacion[]
+  historialCambios    HistorialEstado[]   @relation("CambiadoPor")
+
+  @@index([rol])
+  @@index([ciudad])
+  @@map("usuarios")
+}
+
+model PerfilProfesional {
+  id                   String   @id @default(uuid()) @db.Uuid
+  usuarioId            String   @unique @map("usuario_id") @db.Uuid
+  nombreNegocio        String?  @map("nombre_negocio") @db.VarChar(150)
+  descripcion          String?  @db.Text
+  experienciaAnios     Int?     @map("experiencia_anios")
+  calificacionPromedio Decimal  @default(0) @map("calificacion_promedio") @db.Decimal(3, 2)
+  totalResenas         Int      @default(0) @map("total_resenas")
+  trabajosCompletados  Int      @default(0) @map("trabajos_completados")
+  disponible           Boolean  @default(true)
+  verificado           Boolean  @default(false)
+  createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt            DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+
+  usuario               Usuario                  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  categorias            CategoriaProfesional[]
+  cotizaciones          Cotizacion[]
+  solicitudesAsignadas  SolicitudServicio[]      @relation("ProfesionalSolicitudes")
+  portfolio             PortfolioProfesional[]
+  resenasRecibidas      Resena[]                 @relation("ProfesionalResenas")
+
+  @@index([usuarioId])
+  @@map("perfiles_profesionales")
+}
+
+model Categoria {
+  id               String   @id @default(uuid()) @db.Uuid
+  nombre           String   @unique @db.VarChar(100)
+  slug             String   @unique @db.VarChar(100)
+  iconoUrl         String?  @map("icono_url") @db.Text
+  descripcion      String?  @db.Text
+  categoriaPadreId String?  @map("categoria_padre_id") @db.Uuid
+  isActive         Boolean  @default(true) @map("is_active")
+  orden            Int      @default(0)
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  padre             Categoria?              @relation("Subcategorias", fields: [categoriaPadreId], references: [id])
+  subcategorias     Categoria[]             @relation("Subcategorias")
+  solicitudes       SolicitudServicio[]
+  profCategorias    CategoriaProfesional[]
+
+  @@index([slug])
+  @@index([isActive])
+  @@map("categorias")
+}
+
+model CategoriaProfesional {
+  perfilId     String @map("perfil_id") @db.Uuid
+  categoriaId  String @map("categoria_id") @db.Uuid
+
+  perfil    PerfilProfesional @relation(fields: [perfilId], references: [id], onDelete: Cascade)
+  categoria Categoria         @relation(fields: [categoriaId], references: [id], onDelete: Cascade)
+
+  @@id([perfilId, categoriaId])
+  @@map("categorias_profesionales")
+}
+
+model SolicitudServicio {
+  id                    String            @id @default(uuid()) @db.Uuid
+  clienteId             String            @map("cliente_id") @db.Uuid
+  categoriaId           String            @map("categoria_id") @db.Uuid
+  titulo                String            @db.VarChar(200)
+  descripcion           String            @db.Text
+  latitud               Decimal           @db.Decimal(10, 8)
+  longitud              Decimal           @db.Decimal(11, 8)
+  direccion             String?           @db.VarChar(300)
+  ciudad                String            @db.VarChar(100)
+  fechaPreferida        DateTime?         @map("fecha_preferida") @db.Date()
+  horaInicio            DateTime?         @map("hora_inicio") @db.Time()
+  horaFin               DateTime?         @map("hora_fin") @db.Time()
+  presupuestoMin        Decimal?          @map("presupuesto_min") @db.Decimal(10, 2)
+  presupuestoMax        Decimal?          @map("presupuesto_max") @db.Decimal(10, 2)
+  estado                EstadoSolicitud   @default(solicitado)
+  profesionalId         String?           @map("profesional_id") @db.Uuid
+  createdAt             DateTime          @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt             DateTime          @updatedAt @map("updated_at") @db.Timestamptz()
+
+  cliente               Usuario           @relation("ClienteSolicitudes", fields: [clienteId], references: [id])
+  categoria             Categoria         @relation(fields: [categoriaId], references: [id])
+  profesional           PerfilProfesional? @relation("ProfesionalSolicitudes", fields: [profesionalId], references: [id])
+  archivos              SolicitudArchivo[]
+  cotizaciones          Cotizacion[]
+  historialEstados      HistorialEstado[]
+  mensajes              Mensaje[]
+  resenas               Resena[]
+
+  @@index([clienteId])
+  @@index([categoriaId])
+  @@index([estado])
+  @@index([ciudad])
+  @@index([createdAt])
+  @@map("solicitudes_servicio")
+}
+
+model SolicitudArchivo {
+  id               String        @id @default(uuid()) @db.Uuid
+  solicitudId      String        @map("solicitud_id") @db.Uuid
+  url              String        @db.Text
+  tipo             TipoArchivo
+  orden            Int           @default(0)
+  createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamptz()
+
+  solicitud SolicitudServicio @relation(fields: [solicitudId], references: [id], onDelete: Cascade)
+
+  @@index([solicitudId])
+  @@map("solicitud_archivos")
+}
+
+model Cotizacion {
+  id                   String          @id @default(uuid()) @db.Uuid
+  solicitudId          String          @map("solicitud_id") @db.Uuid
+  profesionalId        String          @map("profesional_id") @db.Uuid
+  precio               Decimal         @db.Decimal(10, 2)
+  duracionEstimada     String?         @map("duracion_estimada") @db.VarChar(50)
+  fechaInicioEstimada  DateTime?       @map("fecha_inicio_estimada") @db.Date()
+  comentarios          String?         @db.Text
+  estado               EstadoCotizacion @default(pending)
+  createdAt            DateTime        @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt            DateTime        @updatedAt @map("updated_at") @db.Timestamptz()
+
+  solicitud   SolicitudServicio   @relation(fields: [solicitudId], references: [id], onDelete: Cascade)
+  profesional PerfilProfesional   @relation(fields: [profesionalId], references: [id])
+
+  @@unique([solicitudId, profesionalId])
+  @@index([solicitudId])
+  @@index([profesionalId])
+  @@index([estado])
+  @@map("cotizaciones")
+}
+
+model HistorialEstado {
+  id               String            @id @default(uuid()) @db.Uuid
+  solicitudId      String            @map("solicitud_id") @db.Uuid
+  estadoAnterior   EstadoSolicitud?  @map("estado_anterior")
+  estadoNuevo      EstadoSolicitud   @map("estado_nuevo")
+  cambiadoPor      String?           @map("cambiado_por") @db.Uuid
+  nota             String?           @db.Text
+  createdAt        DateTime          @default(now()) @map("created_at") @db.Timestamptz()
+
+  solicitud  SolicitudServicio @relation(fields: [solicitudId], references: [id], onDelete: Cascade)
+  usuario    Usuario?          @relation("CambiadoPor", fields: [cambiadoPor], references: [id])
+
+  @@index([solicitudId])
+  @@index([createdAt])
+  @@map("historial_estados")
+}
+
+model Resena {
+  id             String   @id @default(uuid()) @db.Uuid
+  solicitudId    String   @map("solicitud_id") @db.Uuid
+  autorId        String   @map("autor_id") @db.Uuid
+  profesionalId  String   @map("profesional_id") @db.Uuid
+  calificacion   Int      @db.SmallInt
+  comentario     String?  @db.Text
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  solicitud    SolicitudServicio  @relation(fields: [solicitudId], references: [id])
+  autor        Usuario            @relation("AutorResenas", fields: [autorId], references: [id])
+  profesional  PerfilProfesional  @relation("ProfesionalResenas", fields: [profesionalId], references: [id])
+
+  @@unique([solicitudId, autorId])
+  @@index([profesionalId])
+  @@index([solicitudId])
+  @@map("resenas")
+}
+
+model Mensaje {
+  id            String   @id @default(uuid()) @db.Uuid
+  solicitudId   String   @map("solicitud_id") @db.Uuid
+  emisorId      String   @map("emisor_id") @db.Uuid
+  contenido     String   @db.Text
+  leido         Boolean  @default(false)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  solicitud SolicitudServicio @relation(fields: [solicitudId], references: [id], onDelete: Cascade)
+  emisor    Usuario           @relation("EmisorMensajes", fields: [emisorId], references: [id])
+
+  @@index([solicitudId, createdAt])
+  @@index([emisorId])
+  @@map("mensajes")
+}
+
+model Notificacion {
+  id         String   @id @default(uuid()) @db.Uuid
+  usuarioId  String   @map("usuario_id") @db.Uuid
+  tipo       String   @db.VarChar(50)
+  titulo     String   @db.VarChar(200)
+  mensaje    String?  @db.Text
+  datos      Json?
+  leido      Boolean  @default(false)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId, leido, createdAt])
+  @@map("notificaciones")
+}
+
+model PortfolioProfesional {
+  id            String   @id @default(uuid()) @db.Uuid
+  perfilId      String   @map("perfil_id") @db.Uuid
+  url           String   @db.Text
+  caption       String?  @db.VarChar(200)
+  orden         Int      @default(0)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz()
+
+  perfil PerfilProfesional @relation(fields: [perfilId], references: [id], onDelete: Cascade)
+
+  @@index([perfilId])
+  @@map("portfolio_profesional")
+}

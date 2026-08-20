@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="64" fill="#2563eb"/>
+  <text x="256" y="200" font-family="Arial, sans-serif" font-size="140" font-weight="bold" fill="white" text-anchor="middle">SRD</text>
+  <text x="256" y="340" font-family="Arial, sans-serif" font-size="48" fill="#93c5fd" text-anchor="middle">Servicios</text>
+  <rect x="120" y="370" width="272" height="4" rx="2" fill="#93c5fd"/>
+</svg>
