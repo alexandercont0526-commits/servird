@@ -25,6 +25,7 @@ interface RegisterInput {
   descripcion?: string;
   avatarUrl?: string | null;
   categorias?: string[];
+  categoriaPersonalizada?: string;
 }
 
 interface LoginInput {
@@ -79,8 +80,33 @@ export async function register(data: RegisterInput) {
 
       // Asociar categorías
       if (data.categorias && data.categorias.length > 0) {
+        let categoriasToAssign = [...data.categorias];
+
+        // Si seleccionó "Otros" con un nombre personalizado, crear la categoría
+        const otrosCat = await tx.categoria.findUnique({ where: { slug: "otros" } });
+        if (otrosCat && categoriasToAssign.includes(otrosCat.id) && data.categoriaPersonalizada) {
+          const slug = data.categoriaPersonalizada
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/(^-|-$)/g, "");
+
+          const newCat = await tx.categoria.create({
+            data: {
+              nombre: data.categoriaPersonalizada,
+              slug,
+              isActive: true,
+              orden: 98,
+            },
+          });
+
+          categoriasToAssign = categoriasToAssign.filter((id) => id !== otrosCat.id);
+          categoriasToAssign.push(newCat.id);
+        }
+
         await tx.categoriaProfesional.createMany({
-          data: data.categorias.map((categoriaId) => ({
+          data: categoriasToAssign.map((categoriaId) => ({
             perfilId: perfil.id,
             categoriaId,
           })),

@@ -41,6 +41,7 @@ export default function ProfesionalPerfilPage() {
   const [perfil, setPerfil] = useState<ProfesionalProfile | null>(null);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [selectedCategorias, setSelectedCategorias] = useState<string[]>([]);
+  const [customCategory, setCustomCategory] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isNew, setIsNew] = useState(false);
@@ -112,6 +113,9 @@ export default function ProfesionalPerfilPage() {
 
     try {
       const method = isNew ? "POST" : "PATCH";
+      const otrosCat = categorias.find((c) => c.slug === "otros");
+      const isOtrosSelected = otrosCat && selectedCategorias.includes(otrosCat.id);
+
       const res = await fetch("/api/profesionales/me", {
         method,
         headers: { "Content-Type": "application/json" },
@@ -121,6 +125,8 @@ export default function ProfesionalPerfilPage() {
           descripcion: perfil?.descripcion,
           experienciaAnios: perfil?.experienciaAnios,
           categorias: selectedCategorias,
+          categoriaPersonalizada:
+            isOtrosSelected && customCategory ? customCategory : undefined,
         }),
       });
 
@@ -309,6 +315,23 @@ export default function ProfesionalPerfilPage() {
                 </label>
               ))}
             </div>
+
+            {(() => {
+              const otrosCat = categorias.find((c) => c.slug === "otros");
+              if (otrosCat && selectedCategorias.includes(otrosCat.id)) {
+                return (
+                  <div className="mt-3 animate-fade-in">
+                    <Input
+                      label="¿Qué servicio ofreces? *"
+                      placeholder="Ej: Instalación de pisos, Tapicería..."
+                      value={customCategory}
+                      onChange={(e) => setCustomCategory(e.target.value)}
+                    />
+                  </div>
+                );
+              }
+              return null;
+            })()}
             {selectedCategorias.length === 0 && (
               <p className="text-sm text-red-600 mt-1">
                 Selecciona al menos una categoría

@@ -214,6 +214,7 @@ export async function createOrUpdatePerfilProfesional(
     descripcion?: string;
     experienciaAnios?: number;
     categorias?: string[];
+    categoriaPersonalizada?: string;
   }
 ) {
   // Verificar que el usuario sea profesional
@@ -250,10 +251,35 @@ export async function createOrUpdatePerfilProfesional(
         where: { perfilId: perfil.id },
       });
 
+      let categoriasToAssign = [...data.categorias];
+
+      // Si seleccionó "Otros" con un nombre personalizado, crear la categoría
+      const otrosCat = await prisma.categoria.findUnique({ where: { slug: "otros" } });
+      if (otrosCat && categoriasToAssign.includes(otrosCat.id) && data.categoriaPersonalizada) {
+        const slug = data.categoriaPersonalizada
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/(^-|-$)/g, "");
+
+        const newCat = await prisma.categoria.create({
+          data: {
+            nombre: data.categoriaPersonalizada,
+            slug,
+            isActive: true,
+            orden: 98,
+          },
+        });
+
+        categoriasToAssign = categoriasToAssign.filter((id) => id !== otrosCat.id);
+        categoriasToAssign.push(newCat.id);
+      }
+
       // Agregar nuevas categorías
-      if (data.categorias.length > 0) {
+      if (categoriasToAssign.length > 0) {
         await prisma.categoriaProfesional.createMany({
-          data: data.categorias.map((categoriaId) => ({
+          data: categoriasToAssign.map((categoriaId) => ({
             perfilId: perfil.id,
             categoriaId,
           })),
@@ -277,8 +303,33 @@ export async function createOrUpdatePerfilProfesional(
 
   // Agregar categorías
   if (data.categorias && data.categorias.length > 0) {
+    let categoriasToAssign = [...data.categorias];
+
+    // Si seleccionó "Otros" con un nombre personalizado, crear la categoría
+    const otrosCat = await prisma.categoria.findUnique({ where: { slug: "otros" } });
+    if (otrosCat && categoriasToAssign.includes(otrosCat.id) && data.categoriaPersonalizada) {
+      const slug = data.categoriaPersonalizada
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "");
+
+      const newCat = await prisma.categoria.create({
+        data: {
+          nombre: data.categoriaPersonalizada,
+          slug,
+          isActive: true,
+          orden: 98,
+        },
+      });
+
+      categoriasToAssign = categoriasToAssign.filter((id) => id !== otrosCat.id);
+      categoriasToAssign.push(newCat.id);
+    }
+
     await prisma.categoriaProfesional.createMany({
-      data: data.categorias.map((categoriaId) => ({
+      data: categoriasToAssign.map((categoriaId) => ({
         perfilId: perfil.id,
         categoriaId,
       })),

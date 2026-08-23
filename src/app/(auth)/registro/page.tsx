@@ -21,6 +21,7 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [selectedCategorias, setSelectedCategorias] = useState<string[]>([]);
+  const [customCategory, setCustomCategory] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const router = useRouter();
 
@@ -73,10 +74,17 @@ export default function RegisterPage() {
     setError(null);
 
     try {
+      const otrosCat = categorias.find((c) => c.slug === "otros");
+      const isOtrosSelected = otrosCat && selectedCategorias.includes(otrosCat.id);
+
       const payload = {
         ...data,
         avatarUrl: avatarUrl || undefined,
         categorias: selectedRole === "professional" ? selectedCategorias : undefined,
+        categoriaPersonalizada:
+          selectedRole === "professional" && isOtrosSelected && customCategory
+            ? customCategory
+            : undefined,
       };
 
       const response = await fetch("/api/auth/register", {
@@ -284,6 +292,23 @@ export default function RegisterPage() {
               ) : (
                 <p className="text-xs text-gray-400">Cargando categorías...</p>
               )}
+
+              {(() => {
+                const otrosCat = categorias.find((c) => c.slug === "otros");
+                if (otrosCat && selectedCategorias.includes(otrosCat.id)) {
+                  return (
+                    <div className="mt-3 animate-fade-in">
+                      <Input
+                        label="¿Qué servicio ofreces? *"
+                        placeholder="Ej: Instalación depisos, Tapicería..."
+                        value={customCategory}
+                        onChange={(e) => setCustomCategory(e.target.value)}
+                      />
+                    </div>
+                  );
+                }
+                return null;
+              })()}
               {errors.categorias && (
                 <p className="mt-1 text-xs text-red-500 font-medium">{errors.categorias.message}</p>
               )}

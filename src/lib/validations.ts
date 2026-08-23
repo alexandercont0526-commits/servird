@@ -38,6 +38,7 @@ export const registerSchema = z
     descripcion: z.string().max(1000, "Máximo 1000 caracteres").optional(),
     avatarUrl: z.string().url("URL inválida").optional().nullable(),
     categorias: z.array(z.string().uuid()).optional(),
+    categoriaPersonalizada: z.string().max(100, "Máximo 100 caracteres").optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Las contraseñas no coinciden",
