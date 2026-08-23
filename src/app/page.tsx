@@ -114,36 +114,6 @@ export default function HomePage() {
                 calificados y verificados. Fácil, rápido y seguro.
               </p>
 
-              {/* Search Bar */}
-              <div className="glass rounded-2xl p-2.5 shadow-elevated max-w-2xl mx-auto animate-scale-in">
-                <div className="flex flex-col md:flex-row gap-2">
-                  <div className="flex-1 flex items-center gap-3 px-4">
-                    <svg className="w-5 h-5 text-primary-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                    <input
-                      type="text"
-                      placeholder="¿Qué servicio necesitas?"
-                      className="w-full py-3 text-gray-900 placeholder-gray-400 focus:outline-none bg-transparent text-sm"
-                    />
-                  </div>
-                  <div className="flex-1 flex items-center gap-3 px-4 border-t md:border-t-0 md:border-l border-gray-200/50 pt-3 md:pt-0">
-                    <svg className="w-5 h-5 text-primary-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    <input
-                      type="text"
-                      placeholder="Tu ubicación"
-                      className="w-full py-3 text-gray-900 placeholder-gray-400 focus:outline-none bg-transparent text-sm"
-                    />
-                  </div>
-                  <button className="bg-gradient-to-r from-primary-500 to-primary-600 text-white px-8 py-3 rounded-xl font-semibold hover:from-primary-600 hover:to-primary-700 transition-all duration-300 shadow-soft hover:shadow-glow hover:-translate-y-0.5 text-sm">
-                    Buscar
-                  </button>
-                </div>
-              </div>
-
               {/* Trust indicators */}
               <div className="flex items-center justify-center gap-6 mt-8 text-white/50 text-sm animate-fade-in" style={{ animationDelay: "0.6s" }}>
                 <div className="flex items-center gap-1.5">
