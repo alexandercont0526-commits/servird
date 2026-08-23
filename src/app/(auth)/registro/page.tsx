@@ -46,7 +46,6 @@ export default function RegisterPage() {
         return;
       }
 
-      // Redirect based on role
       const redirectPath =
         data.rol === "professional" ? "/profesional" : "/cliente";
       router.push(redirectPath);
@@ -59,16 +58,19 @@ export default function RegisterPage() {
   };
 
   return (
-    <div>
+    <div className="animate-fade-in">
       <h1 className="text-2xl font-bold text-gray-900 mb-2">
         Crear Cuenta
       </h1>
-      <p className="text-gray-600 mb-8">
+      <p className="text-gray-500 mb-8">
         Únete a ServiRD y encuentra los mejores servicios
       </p>
 
       {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+        <div className="mb-5 p-4 bg-red-50 border border-red-100 rounded-xl text-red-600 text-sm font-medium flex items-center gap-2">
+          <svg className="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+          </svg>
           {error}
         </div>
       )}
@@ -76,15 +78,15 @@ export default function RegisterPage() {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {/* Role selection */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
             ¿Cómo quieres usar ServiRD?
           </label>
           <div className="grid grid-cols-2 gap-3">
             <label
-              className={`flex items-center justify-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${
+              className={`flex items-center justify-center p-5 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
                 selectedRole === "client"
-                  ? "border-blue-600 bg-blue-50"
-                  : "border-gray-200 hover:border-gray-300"
+                  ? "border-primary-500 bg-primary-50 shadow-soft"
+                  : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
               }`}
             >
               <input
@@ -94,31 +96,27 @@ export default function RegisterPage() {
                 {...register("rol")}
               />
               <div className="text-center">
-                <svg
-                  className="w-8 h-8 mx-auto mb-2 text-blue-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-                <span className="font-medium text-gray-900">Cliente</span>
-                <p className="text-xs text-gray-500 mt-1">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3 ${
+                  selectedRole === "client"
+                    ? "bg-primary-100 text-primary-600"
+                    : "bg-gray-100 text-gray-400"
+                }`}>
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <span className="font-semibold text-gray-900 text-sm">Cliente</span>
+                <p className="text-xs text-gray-400 mt-1">
                   Buscar servicios
                 </p>
               </div>
             </label>
 
             <label
-              className={`flex items-center justify-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${
+              className={`flex items-center justify-center p-5 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
                 selectedRole === "professional"
-                  ? "border-blue-600 bg-blue-50"
-                  : "border-gray-200 hover:border-gray-300"
+                  ? "border-primary-500 bg-primary-50 shadow-soft"
+                  : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
               }`}
             >
               <input
@@ -128,28 +126,24 @@ export default function RegisterPage() {
                 {...register("rol")}
               />
               <div className="text-center">
-                <svg
-                  className="w-8 h-8 mx-auto mb-2 text-blue-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                  />
-                </svg>
-                <span className="font-medium text-gray-900">Profesional</span>
-                <p className="text-xs text-gray-500 mt-1">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3 ${
+                  selectedRole === "professional"
+                    ? "bg-primary-100 text-primary-600"
+                    : "bg-gray-100 text-gray-400"
+                }`}>
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <span className="font-semibold text-gray-900 text-sm">Profesional</span>
+                <p className="text-xs text-gray-400 mt-1">
                   Ofrecer servicios
                 </p>
               </div>
             </label>
           </div>
           {errors.rol && (
-            <p className="mt-1 text-sm text-red-600">{errors.rol.message}</p>
+            <p className="mt-1.5 text-xs text-red-500 font-medium">{errors.rol.message}</p>
           )}
         </div>
 
@@ -204,18 +198,20 @@ export default function RegisterPage() {
 
         <Button
           type="submit"
+          variant="gradient"
           className="w-full"
+          size="lg"
           isLoading={isLoading}
         >
           Crear Cuenta
         </Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-gray-600">
+      <p className="mt-8 text-center text-sm text-gray-500">
         ¿Ya tienes una cuenta?{" "}
         <Link
           href="/login"
-          className="text-blue-600 hover:text-blue-700 font-medium"
+          className="text-primary-600 hover:text-primary-700 font-semibold"
         >
           Iniciar Sesión
         </Link>

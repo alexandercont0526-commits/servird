@@ -20,7 +20,7 @@ export default function AppShell({ children, user }: AppShellProps) {
   const role = user.rol as "client" | "professional" | "admin";
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-surface-dim">
       <Sidebar
         role={role}
         isOpen={sidebarOpen}
@@ -30,7 +30,7 @@ export default function AppShell({ children, user }: AppShellProps) {
       <div className="lg:ml-64">
         <TopBar user={user} onMenuClick={() => setSidebarOpen(true)} />
 
-        <main className="p-4 lg:p-6">{children}</main>
+        <main className="p-4 lg:p-6 animate-fade-in">{children}</main>
       </div>
     </div>
   );

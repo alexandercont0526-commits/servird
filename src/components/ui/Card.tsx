@@ -3,19 +3,28 @@ import { cn } from "@/lib/utils";
 
 interface CardProps extends HTMLAttributes<HTMLDivElement> {
   hover?: boolean;
+  variant?: "default" | "glass" | "elevated";
 }
 
 export default function Card({
   className,
   hover = false,
+  variant = "default",
   children,
   ...props
 }: CardProps) {
+  const variants = {
+    default: "bg-white shadow-card border border-gray-100",
+    glass: "glass shadow-elevated",
+    elevated: "bg-white shadow-elevated border border-gray-100",
+  };
+
   return (
     <div
       className={cn(
-        "bg-white rounded-xl shadow-sm border border-gray-200",
-        hover && "hover:shadow-md transition-shadow cursor-pointer",
+        "rounded-2xl",
+        variants[variant],
+        hover && "hover:shadow-elevated hover:-translate-y-0.5 transition-all duration-300 cursor-pointer",
         className
       )}
       {...props}
@@ -32,7 +41,7 @@ export function CardHeader({
 }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("px-6 py-4 border-b border-gray-200", className)}
+      className={cn("px-6 py-5 border-b border-gray-100", className)}
       {...props}
     >
       {children}
@@ -46,7 +55,7 @@ export function CardContent({
   ...props
 }: HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn("px-6 py-4", className)} {...props}>
+    <div className={cn("px-6 py-5", className)} {...props}>
       {children}
     </div>
   );
@@ -60,7 +69,7 @@ export function CardFooter({
   return (
     <div
       className={cn(
-        "px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-xl",
+        "px-6 py-4 border-t border-gray-100 bg-gray-50/50 rounded-b-2xl",
         className
       )}
       {...props}

@@ -33,7 +33,7 @@ export default function Avatar({
         src={src}
         alt={alt || `${nombre} ${apellido}`}
         className={cn(
-          "rounded-full object-cover",
+          "rounded-xl object-cover ring-2 ring-white shadow-soft",
           sizes[size],
           className
         )}
@@ -44,7 +44,7 @@ export default function Avatar({
   return (
     <div
       className={cn(
-        "rounded-full bg-blue-600 text-white flex items-center justify-center font-medium",
+        "rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 text-white flex items-center justify-center font-bold shadow-soft",
         sizes[size],
         className
       )}
