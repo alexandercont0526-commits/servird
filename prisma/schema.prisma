@@ -72,6 +72,7 @@ model Usuario {
 model PerfilProfesional {
   id                   String   @id @default(uuid()) @db.Uuid
   usuarioId            String   @unique @map("usuario_id") @db.Uuid
+  profesion            String?  @db.VarChar(150)
   nombreNegocio        String?  @map("nombre_negocio") @db.VarChar(150)
   descripcion          String?  @db.Text
   experienciaAnios     Int?     @map("experiencia_anios")

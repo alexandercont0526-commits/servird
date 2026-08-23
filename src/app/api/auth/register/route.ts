@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { confirmPassword, ...registerData } = result.data;
-    const response = await register(registerData);
+    const response = await register(registerData as Parameters<typeof register>[0]);
 
     return successResponse(response, "Usuario registrado exitosamente", 201);
   } catch (error) {

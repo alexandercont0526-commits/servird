@@ -31,6 +31,7 @@ export interface Usuario {
 export interface PerfilProfesional {
   id: string;
   usuarioId: string;
+  profesion?: string | null;
   nombreNegocio?: string | null;
   descripcion?: string | null;
   experienciaAnios?: number | null;

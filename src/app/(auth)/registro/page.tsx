@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
@@ -8,16 +8,27 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { registerSchema, type RegisterInput } from "@/lib/validations";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import FileUpload from "@/components/ui/FileUpload";
+
+interface Categoria {
+  id: string;
+  nombre: string;
+  slug: string;
+}
 
 export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [selectedCategorias, setSelectedCategorias] = useState<string[]>([]);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const router = useRouter();
 
   const {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
@@ -28,15 +39,50 @@ export default function RegisterPage() {
 
   const selectedRole = watch("rol");
 
+  useEffect(() => {
+    if (selectedRole === "professional") {
+      fetch("/api/categorias")
+        .then((res) => res.json())
+        .then(({ data }) => setCategorias(data || []))
+        .catch(() => {});
+    }
+  }, [selectedRole]);
+
+  useEffect(() => {
+    if (avatarUrl) {
+      setValue("avatarUrl", avatarUrl, { shouldValidate: true });
+    }
+  }, [avatarUrl, setValue]);
+
+  useEffect(() => {
+    setValue("categorias", selectedCategorias as RegisterInput["categorias"], {
+      shouldValidate: true,
+    });
+  }, [selectedCategorias, setValue]);
+
+  function toggleCategoria(catId: string) {
+    setSelectedCategorias((prev) =>
+      prev.includes(catId)
+        ? prev.filter((id) => id !== catId)
+        : [...prev, catId]
+    );
+  }
+
   const onSubmit = async (data: RegisterInput) => {
     setIsLoading(true);
     setError(null);
 
     try {
+      const payload = {
+        ...data,
+        avatarUrl: avatarUrl || undefined,
+        categorias: selectedRole === "professional" ? selectedCategorias : undefined,
+      };
+
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
 
       const result = await response.json();
@@ -146,6 +192,104 @@ export default function RegisterPage() {
             <p className="mt-1.5 text-xs text-red-500 font-medium">{errors.rol.message}</p>
           )}
         </div>
+
+        {/* Professional-specific fields */}
+        {selectedRole === "professional" && (
+          <div className="space-y-4 p-4 bg-primary-50/50 border border-primary-100 rounded-xl animate-fade-in">
+            <p className="text-sm font-semibold text-primary-700 flex items-center gap-2">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Información profesional
+            </p>
+
+            <Input
+              label="Profesión *"
+              placeholder="Ej: Plomero, Electricista, Pintor..."
+              error={errors.profesion?.message}
+              {...register("profesion")}
+            />
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Descripción de tus servicios *
+              </label>
+              <textarea
+                {...register("descripcion")}
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                placeholder="Describe brevemente qué haces, tu experiencia, etc."
+              />
+              {errors.descripcion && (
+                <p className="mt-1 text-xs text-red-500 font-medium">{errors.descripcion.message}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Foto de perfil
+              </label>
+              {avatarUrl ? (
+                <div className="flex items-center gap-3">
+                  <img
+                    src={avatarUrl}
+                    alt="Foto de perfil"
+                    className="w-16 h-16 rounded-full object-cover border-2 border-primary-200"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setAvatarUrl(null)}
+                    className="text-sm text-red-500 hover:text-red-700 font-medium"
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              ) : (
+                <FileUpload
+                  onUpload={setAvatarUrl}
+                  folder="servird/avatars"
+                  className="bg-white"
+                />
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Categorías de servicio *
+              </label>
+              <p className="text-xs text-gray-500 mb-2">
+                Selecciona las categorías en las que trabajas
+              </p>
+              {categorias.length > 0 ? (
+                <div className="grid grid-cols-2 gap-2">
+                  {categorias.map((cat) => (
+                    <label
+                      key={cat.id}
+                      className={`flex items-center gap-2 p-2.5 border rounded-lg cursor-pointer transition-colors text-sm ${
+                        selectedCategorias.includes(cat.id)
+                          ? "border-primary-500 bg-primary-50 text-primary-700"
+                          : "border-gray-200 hover:border-gray-300 text-gray-600"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedCategorias.includes(cat.id)}
+                        onChange={() => toggleCategoria(cat.id)}
+                        className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                      />
+                      <span>{cat.nombre}</span>
+                    </label>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-gray-400">Cargando categorías...</p>
+              )}
+              {errors.categorias && (
+                <p className="mt-1 text-xs text-red-500 font-medium">{errors.categorias.message}</p>
+              )}
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-2 gap-4">
           <Input

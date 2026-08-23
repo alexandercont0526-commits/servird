@@ -6,9 +6,11 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Avatar from "@/components/ui/Avatar";
 import Badge from "@/components/ui/Badge";
+import FileUpload from "@/components/ui/FileUpload";
 
 interface ProfesionalProfile {
   id?: string;
+  profesion?: string;
   nombreNegocio?: string;
   descripcion?: string;
   experienciaAnios?: number;
@@ -42,6 +44,7 @@ export default function ProfesionalPerfilPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isNew, setIsNew] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [message, setMessage] = useState<{
     type: "success" | "error";
     text: string;
@@ -58,15 +61,16 @@ export default function ProfesionalPerfilPage() {
       if (res.ok) {
         const { data } = await res.json();
         setPerfil(data);
+        setAvatarUrl(data.usuario?.avatarUrl || null);
         setSelectedCategorias(
           data.categorias.map(
             (c: { categoria: { id: string } }) => c.categoria.id
           )
         );
       } else {
-        // No tiene perfil, modo creación
         setIsNew(true);
         setPerfil({
+          profesion: "",
           nombreNegocio: "",
           descripcion: "",
           experienciaAnios: 0,
@@ -112,6 +116,7 @@ export default function ProfesionalPerfilPage() {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          profesion: perfil?.profesion,
           nombreNegocio: perfil?.nombreNegocio,
           descripcion: perfil?.descripcion,
           experienciaAnios: perfil?.experienciaAnios,
@@ -180,12 +185,12 @@ export default function ProfesionalPerfilPage() {
         {!isNew && (
           <div className="flex items-center gap-4 mb-6 pb-6 border-b border-gray-200">
             <Avatar
-              src={perfil.usuario.avatarUrl}
+              src={avatarUrl || perfil.usuario.avatarUrl}
               nombre={perfil.usuario.nombre}
               apellido={perfil.usuario.apellido}
               size="xl"
             />
-            <div>
+            <div className="flex-1">
               <p className="font-medium text-gray-900">
                 {perfil.usuario.nombre} {perfil.usuario.apellido}
               </p>
@@ -199,7 +204,44 @@ export default function ProfesionalPerfilPage() {
           </div>
         )}
 
+        {/* Photo upload */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Foto de perfil
+          </label>
+          {(avatarUrl || perfil.usuario?.avatarUrl) ? (
+            <div className="flex items-center gap-3">
+              <img
+                src={avatarUrl || perfil.usuario.avatarUrl}
+                alt="Foto de perfil"
+                className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
+              />
+              <button
+                type="button"
+                onClick={() => setAvatarUrl(null)}
+                className="text-sm text-red-500 hover:text-red-700 font-medium"
+              >
+                Eliminar foto
+              </button>
+            </div>
+          ) : (
+            <FileUpload
+              onUpload={setAvatarUrl}
+              folder="servird/avatars"
+            />
+          )}
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-6">
+          <Input
+            label="Profesión *"
+            value={perfil.profesion || ""}
+            onChange={(e) =>
+              setPerfil({ ...perfil, profesion: e.target.value })
+            }
+            placeholder="Ej: Plomero, Electricista, Pintor..."
+          />
+
           <Input
             label="Nombre del Negocio (opcional)"
             value={perfil.nombreNegocio || ""}

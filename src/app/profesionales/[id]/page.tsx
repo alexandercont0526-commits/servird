@@ -89,6 +89,12 @@ export default async function ProfesionalPublicPage({
                 )}
               </div>
 
+              {perfil.profesion && (
+                <p className="text-sm font-medium text-primary-600 mb-1">
+                  {perfil.profesion}
+                </p>
+              )}
+
               {perfil.nombreNegocio && (
                 <p className="text-lg text-gray-600 mb-2">
                   {perfil.nombreNegocio}

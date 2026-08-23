@@ -21,6 +21,10 @@ interface RegisterInput {
   apellido: string;
   telefono?: string;
   rol: "client" | "professional";
+  profesion?: string;
+  descripcion?: string;
+  avatarUrl?: string | null;
+  categorias?: string[];
 }
 
 interface LoginInput {
@@ -41,31 +45,57 @@ export async function register(data: RegisterInput) {
   // Hash de la contraseña
   const passwordHash = await bcrypt.hash(data.password, 12);
 
-  // Crear usuario
-  const user = await prisma.usuario.create({
-    data: {
-      email: data.email,
-      passwordHash,
-      nombre: data.nombre,
-      apellido: data.apellido,
-      telefono: data.telefono,
-      rol: data.rol,
-    },
-    select: {
-      id: true,
-      email: true,
-      nombre: true,
-      apellido: true,
-      rol: true,
-      createdAt: true,
-    },
+  // Crear usuario + perfil profesional en una transacción
+  const result = await prisma.$transaction(async (tx) => {
+    const user = await tx.usuario.create({
+      data: {
+        email: data.email,
+        passwordHash,
+        nombre: data.nombre,
+        apellido: data.apellido,
+        telefono: data.telefono,
+        rol: data.rol,
+        avatarUrl: data.avatarUrl || null,
+      },
+      select: {
+        id: true,
+        email: true,
+        nombre: true,
+        apellido: true,
+        rol: true,
+        createdAt: true,
+      },
+    });
+
+    // Si es profesional, crear perfil profesional
+    if (data.rol === "professional" && data.profesion) {
+      const perfil = await tx.perfilProfesional.create({
+        data: {
+          usuarioId: user.id,
+          profesion: data.profesion,
+          descripcion: data.descripcion || null,
+        },
+      });
+
+      // Asociar categorías
+      if (data.categorias && data.categorias.length > 0) {
+        await tx.categoriaProfesional.createMany({
+          data: data.categorias.map((categoriaId) => ({
+            perfilId: perfil.id,
+            categoriaId,
+          })),
+        });
+      }
+    }
+
+    return user;
   });
 
   // Generar tokens
   const tokenPayload: TokenPayload = {
-    userId: user.id,
-    email: user.email,
-    rol: user.rol,
+    userId: result.id,
+    email: result.email,
+    rol: result.rol,
   };
 
   const accessToken = await generateAccessToken(tokenPayload);
@@ -74,7 +104,7 @@ export async function register(data: RegisterInput) {
   // Guardar cookies
   await setAuthCookies(accessToken, refreshToken);
 
-  return { user, accessToken };
+  return { user: result, accessToken };
 }
 
 export async function login(data: LoginInput) {
@@ -195,6 +225,7 @@ export async function getCurrentUserProfile(userId: string) {
       perfilProfesional: {
         select: {
           id: true,
+          profesion: true,
           nombreNegocio: true,
           descripcion: true,
           experienciaAnios: true,

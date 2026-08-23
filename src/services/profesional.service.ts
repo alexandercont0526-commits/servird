@@ -209,6 +209,7 @@ export async function getMiPerfilProfesional(usuarioId: string) {
 export async function createOrUpdatePerfilProfesional(
   usuarioId: string,
   data: {
+    profesion?: string;
     nombreNegocio?: string;
     descripcion?: string;
     experienciaAnios?: number;
@@ -232,6 +233,7 @@ export async function createOrUpdatePerfilProfesional(
   if (existing) {
     // Actualizar perfil existente
     const updateData: Record<string, unknown> = {};
+    if (data.profesion !== undefined) updateData.profesion = data.profesion;
     if (data.nombreNegocio !== undefined) updateData.nombreNegocio = data.nombreNegocio;
     if (data.descripcion !== undefined) updateData.descripcion = data.descripcion;
     if (data.experienciaAnios !== undefined) updateData.experienciaAnios = data.experienciaAnios;
@@ -266,6 +268,7 @@ export async function createOrUpdatePerfilProfesional(
   const perfil = await prisma.perfilProfesional.create({
     data: {
       usuarioId,
+      profesion: data.profesion,
       nombreNegocio: data.nombreNegocio,
       descripcion: data.descripcion,
       experienciaAnios: data.experienciaAnios,

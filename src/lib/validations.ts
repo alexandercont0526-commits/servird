@@ -34,11 +34,42 @@ export const registerSchema = z
       .min(8, "La contraseña debe tener al menos 8 caracteres"),
     confirmPassword: z.string().min(1, "Confirma tu contraseña"),
     rol: z.enum(["client", "professional"], { message: "Selecciona un tipo de cuenta" }),
+    profesion: z.string().max(150, "Máximo 150 caracteres").optional(),
+    descripcion: z.string().max(1000, "Máximo 1000 caracteres").optional(),
+    avatarUrl: z.string().url("URL inválida").optional().nullable(),
+    categorias: z.array(z.string().uuid()).optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Las contraseñas no coinciden",
     path: ["confirmPassword"],
-  });
+  })
+  .refine(
+    (data) => {
+      if (data.rol === "professional") {
+        return !!data.profesion && data.profesion.trim().length > 0;
+      }
+      return true;
+    },
+    { message: "La profesión es requerida para profesionales", path: ["profesion"] }
+  )
+  .refine(
+    (data) => {
+      if (data.rol === "professional") {
+        return !!data.descripcion && data.descripcion.trim().length >= 10;
+      }
+      return true;
+    },
+    { message: "La descripción debe tener al menos 10 caracteres", path: ["descripcion"] }
+  )
+  .refine(
+    (data) => {
+      if (data.rol === "professional") {
+        return !!data.categorias && data.categorias.length > 0;
+      }
+      return true;
+    },
+    { message: "Selecciona al menos una categoría", path: ["categorias"] }
+  );
 
 export const forgotPasswordSchema = z.object({
   email: z
@@ -84,6 +115,7 @@ export const updateProfileSchema = z.object({
 // ==================== PERFIL PROFESIONAL ====================
 
 export const createProfessionalProfileSchema = z.object({
+  profesion: z.string().max(150, "Máximo 150 caracteres").optional(),
   nombreNegocio: z.string().max(150, "Máximo 150 caracteres").optional(),
   descripcion: z
     .string()
