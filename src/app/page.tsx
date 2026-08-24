@@ -9,6 +9,7 @@ const categories = [
   { name: "Mudanzas", icon: "📦", slug: "mudanzas", color: "from-violet-400 to-purple-500", bg: "bg-violet-50" },
   { name: "Cerrajería", icon: "🔐", slug: "cerrajeria", color: "from-slate-500 to-gray-600", bg: "bg-slate-50" },
   { name: "Aire Acondicionado", icon: "❄️", slug: "aire-acondicionado", color: "from-cyan-400 to-blue-500", bg: "bg-cyan-50" },
+  { name: "Otros", icon: "📌", slug: "otros", color: "from-gray-400 to-gray-600", bg: "bg-gray-50" },
 ];
 
 const steps = [

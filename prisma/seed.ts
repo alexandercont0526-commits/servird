@@ -91,6 +91,12 @@ const categories = [
     descripcion: "Servicios de transporte de personas y carga",
     orden: 14,
   },
+  {
+    nombre: "Otros",
+    slug: "otros",
+    descripcion: "Servicios que no encajan en otras categorías",
+    orden: 99,
+  },
 ];
 
 async function main() {
