@@ -27,14 +27,14 @@ export async function POST(request: NextRequest) {
 
     if (!otrosExists[0]?.exists) {
       await prisma.$executeRawUnsafe(`
-        INSERT INTO "categorias" ("id", "nombre", "slug", "descripcion", "orden", "created_at", "updated_at")
+        INSERT INTO "categorias" ("id", "nombre", "slug", "descripcion", "is_active", "orden", "created_at")
         VALUES (
-          gen_random_uuid()::text,
+          gen_random_uuid(),
           'Otros',
           'otros',
           'Servicios que no encajan en otras categorías',
+          true,
           99,
-          NOW(),
           NOW()
         )
       `);
