@@ -15,12 +15,16 @@ interface UserProfile {
   avatarUrl?: string;
   ciudad?: string;
   direccion?: string;
+  latitud?: number | null;
+  longitud?: number | null;
 }
 
 export default function ClientePerfilPage() {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
+  const [locationStatus, setLocationStatus] = useState("");
   const [message, setMessage] = useState<{
     type: "success" | "error";
     text: string;
@@ -58,6 +62,8 @@ export default function ClientePerfilPage() {
           telefono: user?.telefono,
           ciudad: user?.ciudad,
           direccion: user?.direccion,
+          latitud: user?.latitud,
+          longitud: user?.longitud,
         }),
       });
 
@@ -73,6 +79,37 @@ export default function ClientePerfilPage() {
     } finally {
       setIsSaving(false);
     }
+  }
+
+  function detectarUbicacion() {
+    if (!navigator.geolocation) {
+      setLocationStatus("Tu navegador no soporta geolocalización");
+      return;
+    }
+
+    setIsLocating(true);
+    setLocationStatus("");
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUser((prev) =>
+          prev
+            ? {
+                ...prev,
+                latitud: position.coords.latitude,
+                longitud: position.coords.longitude,
+              }
+            : prev
+        );
+        setLocationStatus("Ubicación detectada correctamente");
+        setIsLocating(false);
+      },
+      () => {
+        setLocationStatus("No se pudo obtener tu ubicación. Verifica los permisos del navegador.");
+        setIsLocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 300000 }
+    );
   }
 
   if (isLoading) {
@@ -152,12 +189,37 @@ export default function ClientePerfilPage() {
             placeholder="Santo Domingo"
           />
 
-          <Input
-            label="Dirección"
-            value={user.direccion || ""}
-            onChange={(e) => setUser({ ...user, direccion: e.target.value })}
-            placeholder="Calle, número, sector"
-          />
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-sm font-semibold text-gray-700">Dirección</label>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={detectarUbicacion}
+                disabled={isLocating}
+              >
+                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                {isLocating ? "Detectando..." : "Detectar ubicación"}
+              </Button>
+            </div>
+            {locationStatus && (
+              <p className={`text-xs mb-2 flex items-center gap-1 ${user.latitud ? "text-green-600" : "text-amber-600"}`}>
+                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                {locationStatus}
+              </p>
+            )}
+            <Input
+              value={user.direccion || ""}
+              onChange={(e) => setUser({ ...user, direccion: e.target.value })}
+              placeholder="Calle, número, sector"
+            />
+          </div>
 
           <div className="flex justify-end gap-3 pt-4">
             <Button

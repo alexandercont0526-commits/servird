@@ -16,6 +16,9 @@ export default function NuevaSolicitudPage() {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
+  const [locationStatus, setLocationStatus] = useState("");
   const [form, setForm] = useState({
     categoriaId: "",
     titulo: "",
@@ -31,6 +34,22 @@ export default function NuevaSolicitudPage() {
     fetch("/api/categorias")
       .then((r) => r.json())
       .then(({ data }) => setCategorias(data || []));
+
+    if (navigator.geolocation) {
+      setIsLocating(true);
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+          setLocationStatus("Ubicación detectada automáticamente");
+          setIsLocating(false);
+        },
+        () => {
+          setLocationStatus("No se pudo detectar ubicación — se usará ubicación por defecto");
+          setIsLocating(false);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
+      );
+    }
   }, []);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
@@ -43,8 +62,8 @@ export default function NuevaSolicitudPage() {
     setError("");
 
     try {
-      const lat = 18.4861;
-      const lng = -69.9312;
+      const lat = location?.lat ?? 18.4861;
+      const lng = location?.lng ?? -69.9312;
       const payload = {
         ...form,
         latitud: lat,
@@ -112,9 +131,50 @@ export default function NuevaSolicitudPage() {
           />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Input label="Ciudad *" name="ciudad" value={form.ciudad} onChange={handleChange} placeholder="Santo Domingo" required />
-          <Input label="Dirección" name="direccion" value={form.direccion} onChange={handleChange} placeholder="Calle, número..." />
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <label className="block text-sm font-semibold text-gray-700">Ubicación del servicio</label>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                if (!navigator.geolocation) return;
+                setIsLocating(true);
+                navigator.geolocation.getCurrentPosition(
+                  (pos) => {
+                    setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+                    setLocationStatus("Ubicación detectada correctamente");
+                    setIsLocating(false);
+                  },
+                  () => {
+                    setLocationStatus("No se pudo detectar ubicación");
+                    setIsLocating(false);
+                  },
+                  { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
+                );
+              }}
+              disabled={isLocating}
+            >
+              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              {isLocating ? "Detectando..." : "Usar mi ubicación"}
+            </Button>
+          </div>
+          {locationStatus && (
+            <p className={`text-xs mb-3 flex items-center gap-1 ${location ? "text-green-600" : "text-amber-600"}`}>
+              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              {locationStatus}
+            </p>
+          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input label="Ciudad *" name="ciudad" value={form.ciudad} onChange={handleChange} placeholder="Santo Domingo" required />
+            <Input label="Dirección" name="direccion" value={form.direccion} onChange={handleChange} placeholder="Calle, número..." />
+          </div>
         </div>
 
         <Input label="Fecha preferida" name="fechaPreferida" type="date" value={form.fechaPreferida} onChange={handleChange} />
